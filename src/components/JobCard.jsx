@@ -37,22 +37,34 @@ const JobCard = ({ job, index, onClick }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Tag size={16} className="text-blue-500" />
-          <span className="text-sm">{job.kategori_posisi}</span>
-        </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <MapPin size={16} className="text-green-500" />
-          <span className="text-sm">{job.provinsi}</span>
-        </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <Home size={16} className="text-purple-500" />
-          <span className="text-sm">{job.tempat_tinggal}</span>
-        </div>
-        {job.gaji && (
+        {job.kategori_posisi && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <Tag size={16} className="text-blue-500" />
+            <span className="text-sm">{job.kategori_posisi}</span>
+          </div>
+        )}
+        {job.provinsi && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <MapPin size={16} className="text-green-500" />
+            <span className="text-sm">{job.provinsi}</span>
+          </div>
+        )}
+        {job.tempat_tinggal && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <Home size={16} className="text-purple-500" />
+            <span className="text-sm">{job.tempat_tinggal}</span>
+          </div>
+        )}
+        {job.gaji && job.gaji.trim() && (
           <div className="flex items-center gap-2 text-gray-600">
             <DollarSign size={16} className="text-yellow-500" />
             <span className="text-sm">{job.gaji}</span>
+          </div>
+        )}
+        {job.durasi && job.durasi.trim() && !job.gaji && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <Clock size={16} className="text-purple-500" />
+            <span className="text-sm">{job.durasi}</span>
           </div>
         )}
       </div>

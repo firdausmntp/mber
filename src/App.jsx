@@ -46,22 +46,28 @@ function App() {
         const enhancedData = jsonData.map((job, index) => ({
           ...job,
           id: index + 1,
-          gaji:
-            job.gaji ||
-            `Rp ${(Math.random() * 2000000 + 1500000).toLocaleString("id-ID", {
-              maximumFractionDigits: 0,
-            })}`,
-          durasi: job.durasi || `${Math.floor(Math.random() * 4 + 3)} bulan`,
-          requirements: job.requirements || [
-            "Mahasiswa aktif semester 5-7",
-            "IPK minimal 3.00",
-            "Dapat bekerja full time",
-          ],
-          benefits: job.benefits || [
-            "Sertifikat magang",
-            "Networking dengan profesional",
-            "Pengalaman kerja nyata",
-          ],
+          // Don't generate random gaji - only use if exists and not empty
+          gaji: job.gaji && job.gaji.trim() !== "" ? job.gaji : null,
+          // Don't generate random durasi - only use if exists and not empty
+          durasi: job.durasi && job.durasi.trim() !== "" ? job.durasi : null,
+          // Ensure provinsi is clean
+          provinsi:
+            job.provinsi && job.provinsi.trim() !== ""
+              ? job.provinsi
+              : "Tidak Diketahui",
+          // Only use real requirements and benefits data, no fake data
+          requirements:
+            job.requirements &&
+            Array.isArray(job.requirements) &&
+            job.requirements.length > 0
+              ? job.requirements
+              : null,
+          benefits:
+            job.benefits &&
+            Array.isArray(job.benefits) &&
+            job.benefits.length > 0
+              ? job.benefits
+              : null,
         }));
 
         setData(enhancedData);
@@ -120,7 +126,9 @@ function App() {
     }
 
     if (filters.province) {
-      filtered = filtered.filter((item) => item.provinsi === filters.province);
+      filtered = filtered.filter(
+        (item) => item.provinsi && item.provinsi === filters.province
+      );
     }
 
     return filtered;
@@ -128,11 +136,17 @@ function App() {
 
   // Get unique values for filters
   const categories = useMemo(() => {
-    return [...new Set(data.map((item) => item.kategori_posisi))].sort();
+    return [...new Set(data.map((item) => item.kategori_posisi))]
+      .filter(Boolean)
+      .filter((cat) => cat && cat.trim() !== "")
+      .sort();
   }, [data]);
 
   const provinces = useMemo(() => {
-    return [...new Set(data.map((item) => item.provinsi))].sort();
+    return [...new Set(data.map((item) => item.provinsi))]
+      .filter(Boolean)
+      .filter((prov) => prov && prov.trim() !== "")
+      .sort();
   }, [data]);
 
   // Pagination
