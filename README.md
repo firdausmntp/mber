@@ -18,7 +18,7 @@ Website prediksi lowongan magang yang menggunakan AI matching untuk memberikan r
 ## ✨ Fitur Utama
 
 - 🎯 **Smart Matching**: AI dengan fuzzy search & database 1000+ keyword
-- 📊 **Analisis Mendalam**: 100+ kategori skill & bidang  
+- 📊 **Analisis Mendalam**: 100+ kategori skill & bidang
 - 📈 **Prediksi Akurat**: Peluang diterima & rekomendasi
 - 🔍 **Filter Advanced**: Hanya menampilkan lowongan dengan match > 0%
 - 💡 **Rekomendasi**: Tips pengembangan skill & karir
@@ -55,14 +55,16 @@ npm run build
 Project ini menggunakan **GitHub Actions** untuk auto-deploy ke GitHub Pages setiap kali ada push ke branch `main`.
 
 ### Auto Deploy Process:
+
 1. ✅ Push code ke `main` branch
 2. ✅ GitHub Actions akan otomatis:
-   - Install dependencies  
+   - Install dependencies
    - Build project
    - Deploy ke GitHub Pages
 3. ✅ Website live di: https://firdausmntp.github.io/mber/
 
 ### Manual Deploy (jika diperlukan):
+
 ```bash
 npm run deploy
 ```
@@ -70,20 +72,23 @@ npm run deploy
 ## 🎯 Cara Kerja Prediksi
 
 ### Input:
+
 - **Nama**: Identitas pengguna
 - **Jurusan**: Program studi (contoh: Teknik Informatika)
 - **Skills**: Keahlian dipisah koma (contoh: JavaScript, React, Python)
 - **Lokasi**: Preferensi lokasi (opsional)
 
 ### Algoritma Matching:
+
 1. **Keyword Generation**: Mapping jurusan → kategori skill + sinonim
 2. **Smart Matching**: Fuzzy matching + exact matching dengan bobot
 3. **Scoring System**: Posisi match (bobot 5) > Bidang match (bobot 3) > Deskripsi match (bobot 2)
 4. **Acceptance Rate**: Estimasi peluang berdasarkan posisi tersedia vs pendaftar
 
 ### Output:
+
 - ✅ Semua lowongan yang cocok (match > 0%)
-- 📊 Match percentage per lowongan  
+- 📊 Match percentage per lowongan
 - 📈 Peluang diterima dengan breakdown
 - 💡 Rekomendasi skill development
 
