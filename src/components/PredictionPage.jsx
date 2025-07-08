@@ -729,7 +729,9 @@ const PredictionPage = () => {
 
   const loadJobData = async () => {
     try {
-      const response = await fetch("/lowongan_all_20250625_090649.json");
+      const response = await fetch(
+        `${import.meta.env.BASE_URL}lowongan_all_20250625_090649.json`
+      );
       const data = await response.json();
       setJobData(data);
     } catch (error) {

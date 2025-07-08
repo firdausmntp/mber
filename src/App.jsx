@@ -50,7 +50,7 @@ function HomePage() {
         try {
           // Fetch dari JSON lokal yang berisi detail lengkap
           const response = await fetch(
-            "/lowongan_details_20250708_123043.json"
+            `${import.meta.env.BASE_URL}lowongan_details_20250708_123043.json`
           );
 
           if (!response.ok) {
@@ -104,8 +104,7 @@ function HomePage() {
     const loadData = async () => {
       try {
         const response = await fetch(
-          "lowongan_all_20250625_090649.json" ||
-            "lowongan_all_20250625_090649.json"
+          `${import.meta.env.BASE_URL}lowongan_all_20250625_090649.json`
         );
         const jsonData = await response.json();
 
