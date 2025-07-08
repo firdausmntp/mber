@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -22,11 +23,13 @@ import FilterSection from "./components/FilterSection";
 import JobCard from "./components/JobCard";
 import Pagination from "./components/Pagination";
 import StatsSection from "./components/StatsSection";
+import PredictionPage from "./components/PredictionPage";
 
-function App() {
+function HomePage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [isJobDetailLoading, setIsJobDetailLoading] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     category: "",
@@ -35,17 +38,83 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
+  // Fungsi untuk fetch data detail lowongan dari JSON lokal
+  const fetchJobDetail = async (job) => {
+    try {
+      setIsJobDetailLoading(true);
+
+      if (job.slug || job.id) {
+        const jobSlug = job.slug || `lowongan-${job.id}`;
+        console.log("Fetching job detail for:", jobSlug);
+
+        try {
+          // Fetch dari JSON lokal yang berisi detail lengkap
+          const response = await fetch(
+            "/lowongan_details_20250708_123043.json"
+          );
+
+          if (!response.ok) {
+            throw new Error(`Failed to load job details: ${response.status}`);
+          }
+
+          const allJobDetails = await response.json();
+
+          // Cari job detail berdasarkan slug atau id
+          const jobDetail = allJobDetails.find(
+            (detail) =>
+              detail.slug === jobSlug ||
+              detail.id_lowongan === job.id ||
+              detail.slug === `lowongan-${job.id}`
+          );
+
+          if (jobDetail) {
+            console.log(
+              "Successfully found job detail in local JSON:",
+              jobDetail
+            );
+            setSelectedJob(jobDetail);
+            return;
+          } else {
+            throw new Error(`Job detail not found for slug: ${jobSlug}`);
+          }
+        } catch (error) {
+          console.error("Failed to load job details:", error.message);
+          throw error;
+        }
+      } else {
+        throw new Error("No slug or ID available for job");
+      }
+    } catch (error) {
+      console.error("Error fetching job detail:", error);
+
+      // Show error message to user
+      alert(
+        `Gagal memuat detail lowongan: ${error.message}\n\nPastikan file lowongan_details_20250708_123043.json tersedia.`
+      );
+
+      // Don't set selectedJob - this will keep the modal closed
+      setSelectedJob(null);
+    } finally {
+      setIsJobDetailLoading(false);
+    }
+  };
+
   // Load data dari file JSON
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetch("/lowongan_all_20250625_090649.json");
+        const response = await fetch(
+          "lowongan_all_20250625_090649.json" ||
+            "lowongan_all_20250625_090649.json"
+        );
         const jsonData = await response.json();
 
         // Add missing properties to each job for better UI
         const enhancedData = jsonData.map((job, index) => ({
           ...job,
           id: index + 1,
+          // Generate slug untuk matching dengan detail data
+          slug: job.slug || `lowongan-${index + 1}`,
           // Don't generate random gaji - only use if exists and not empty
           gaji: job.gaji && job.gaji.trim() !== "" ? job.gaji : null,
           // Don't generate random durasi - only use if exists and not empty
@@ -78,6 +147,7 @@ function App() {
         setData([
           {
             id: 1,
+            slug: "lowongan-1",
             posisi_magang: "Frontend Developer Intern",
             mitra: "PT Tech Indonesia",
             kategori_posisi: "Teknologi Informasi",
@@ -183,7 +253,8 @@ function App() {
   };
 
   const handleJobClick = (job) => {
-    setSelectedJob(job);
+    // Selalu panggil fetchJobDetail dengan object job lengkap
+    fetchJobDetail(job);
   };
 
   const resetFilters = () => {
@@ -332,6 +403,7 @@ function App() {
       <JobModal
         job={selectedJob}
         isOpen={!!selectedJob}
+        isLoading={isJobDetailLoading}
         onClose={() => setSelectedJob(null)}
       />
 
@@ -358,6 +430,19 @@ function App() {
           </p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function App() {
+  const location = useLocation();
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/prediksi" element={<PredictionPage />} />
+      </Routes>
     </div>
   );
 }

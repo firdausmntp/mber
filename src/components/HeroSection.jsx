@@ -1,6 +1,7 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Briefcase, Building, MapPin } from "lucide-react";
+import { Briefcase, Building, MapPin, Target, Sparkles } from "lucide-react";
 
 const HeroSection = ({ totalJobs, totalCompanies, totalProvinces }) => {
   const stats = [
@@ -34,12 +35,32 @@ const HeroSection = ({ totalJobs, totalCompanies, totalProvinces }) => {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
           <h1 className="text-5xl font-bold mb-4">Data Lowongan Magang</h1>
-          <p className="text-xl opacity-90">
+          <p className="text-xl opacity-90 mb-6">
             Sistem Informasi Monitoring Belajar dan Magang (SIMBELMAWA)
           </p>
+
+          {/* Prediction CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-8"
+          >
+            <Link
+              to="/prediksi"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
+              <Target className="h-6 w-6" />
+              <span className="text-lg">🎯 PREDIKSI LOWONGAN COCOK</span>
+              <Sparkles className="h-5 w-5" />
+            </Link>
+            <p className="text-sm opacity-80 mt-2">
+              Analisis profil Anda dan dapatkan rekomendasi lowongan terbaik!
+            </p>
+          </motion.div>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
