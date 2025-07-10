@@ -43,46 +43,83 @@ function HomePage() {
     try {
       setIsJobDetailLoading(true);
 
-      if (job.slug || job.id) {
-        const jobSlug = job.slug || `lowongan-${job.id}`;
-        console.log("Fetching job detail for:", jobSlug);
+      console.log("Fetching job detail for job:", job);
 
-        try {
-          // Fetch dari JSON lokal yang berisi detail lengkap
-          const response = await fetch(
-            `${import.meta.env.BASE_URL}lowongan_details_20250708_123043.json`
-          );
+      // Prioritas pencarian: 1) id_lowongan asli, 2) slug, 3) id yang di-generate
+      const searchCriteria = {
+        id_lowongan: job.id_lowongan, // ID asli dari database
+        slug: job.slug,
+        generated_id: job.id, // ID yang di-generate saat load data
+      };
 
-          if (!response.ok) {
-            throw new Error(`Failed to load job details: ${response.status}`);
-          }
+      console.log("Search criteria:", searchCriteria);
 
-          const allJobDetails = await response.json();
+      try {
+        // Fetch dari JSON lokal yang berisi detail lengkap
+        const response = await fetch(
+          `${import.meta.env.BASE_URL}lowongan_details_20250708_123043.json`
+        );
 
-          // Cari job detail berdasarkan slug atau id
-          const jobDetail = allJobDetails.find(
-            (detail) =>
-              detail.slug === jobSlug ||
-              detail.id_lowongan === job.id ||
-              detail.slug === `lowongan-${job.id}`
-          );
-
-          if (jobDetail) {
-            console.log(
-              "Successfully found job detail in local JSON:",
-              jobDetail
-            );
-            setSelectedJob(jobDetail);
-            return;
-          } else {
-            throw new Error(`Job detail not found for slug: ${jobSlug}`);
-          }
-        } catch (error) {
-          console.error("Failed to load job details:", error.message);
-          throw error;
+        if (!response.ok) {
+          throw new Error(`Failed to load job details: ${response.status}`);
         }
-      } else {
-        throw new Error("No slug or ID available for job");
+
+        const allJobDetails = await response.json();
+
+        // Cari job detail dengan prioritas pencarian yang benar
+        let jobDetail = null;
+
+        // 1. Prioritas pertama: cari berdasarkan id_lowongan asli
+        if (searchCriteria.id_lowongan) {
+          jobDetail = allJobDetails.find(
+            (detail) => detail.id_lowongan === searchCriteria.id_lowongan
+          );
+          console.log(
+            `Search by id_lowongan (${searchCriteria.id_lowongan}):`,
+            jobDetail ? "FOUND" : "NOT FOUND"
+          );
+        }
+
+        // 2. Jika tidak ketemu, cari berdasarkan slug
+        if (!jobDetail && searchCriteria.slug) {
+          jobDetail = allJobDetails.find(
+            (detail) => detail.slug === searchCriteria.slug
+          );
+          console.log(
+            `Search by slug (${searchCriteria.slug}):`,
+            jobDetail ? "FOUND" : "NOT FOUND"
+          );
+        }
+
+        // 3. Jika masih tidak ketemu, coba dengan generated slug
+        if (!jobDetail && searchCriteria.generated_id) {
+          const generatedSlug = `lowongan-${searchCriteria.generated_id}`;
+          jobDetail = allJobDetails.find(
+            (detail) => detail.slug === generatedSlug
+          );
+          console.log(
+            `Search by generated slug (${generatedSlug}):`,
+            jobDetail ? "FOUND" : "NOT FOUND"
+          );
+        }
+
+        if (jobDetail) {
+          console.log(
+            "Successfully found job detail in local JSON:",
+            jobDetail
+          );
+          setSelectedJob(jobDetail);
+          return;
+        } else {
+          throw new Error(
+            `Job detail not found for criteria: ${JSON.stringify(
+              searchCriteria
+            )}`
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load job details:", error.message);
+        throw error;
       }
     } catch (error) {
       console.error("Error fetching job detail:", error);
@@ -111,9 +148,10 @@ function HomePage() {
         // Add missing properties to each job for better UI
         const enhancedData = jsonData.map((job, index) => ({
           ...job,
-          id: index + 1,
-          // Generate slug untuk matching dengan detail data
-          slug: job.slug || `lowongan-${index + 1}`,
+          // Gunakan id_lowongan asli, tapi tetap berikan fallback generated id untuk keperluan display
+          id: job.id_lowongan || index + 1,
+          // Generate slug untuk matching dengan detail data - gunakan slug asli jika ada
+          slug: job.slug || `lowongan-${job.id_lowongan || index + 1}`,
           // Don't generate random gaji - only use if exists and not empty
           gaji: job.gaji && job.gaji.trim() !== "" ? job.gaji : null,
           // Don't generate random durasi - only use if exists and not empty
@@ -146,6 +184,7 @@ function HomePage() {
         setData([
           {
             id: 1,
+            id_lowongan: 1,
             slug: "lowongan-1",
             posisi_magang: "Frontend Developer Intern",
             mitra: "PT Tech Indonesia",
@@ -252,6 +291,13 @@ function HomePage() {
   };
 
   const handleJobClick = (job) => {
+    console.log("Job clicked:", job);
+    console.log("Job properties:", {
+      id: job.id,
+      id_lowongan: job.id_lowongan,
+      slug: job.slug,
+      posisi_magang: job.posisi_magang,
+    });
     // Selalu panggil fetchJobDetail dengan object job lengkap
     fetchJobDetail(job);
   };
