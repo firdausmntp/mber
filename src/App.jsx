@@ -26,6 +26,7 @@ import StatsSection from "./components/StatsSection";
 import PredictionPage from "./components/PredictionPage";
 
 function HomePage() {
+  const location = useLocation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -34,6 +35,7 @@ function HomePage() {
     search: "",
     category: "",
     province: "",
+    location: "", // New field for detailed location search (city, district, etc)
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -212,6 +214,28 @@ function HomePage() {
     loadData();
   }, []);
 
+  // Check for jobId parameter in URL and open the modal
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const jobId = searchParams.get("jobId");
+
+    if (jobId && data.length > 0) {
+      console.log("Found jobId in URL:", jobId);
+      // Find the job with the matching ID
+      const jobToShow = data.find(
+        (job) =>
+          String(job.id) === String(jobId) ||
+          String(job.id_lowongan) === String(jobId)
+      );
+
+      if (jobToShow) {
+        console.log("Found job to show:", jobToShow);
+        // Fetch job details and show modal
+        fetchJobDetail(jobToShow);
+      }
+    }
+  }, [location.search, data]);
+
   // Filter data
   const filteredData = useMemo(() => {
     let filtered = data;
@@ -237,6 +261,24 @@ function HomePage() {
       filtered = filtered.filter(
         (item) => item.provinsi && item.provinsi === filters.province
       );
+    }
+
+    // New filter for detailed location search
+    if (filters.location && filters.location.trim() !== "") {
+      const searchTerm = filters.location.toLowerCase().trim();
+      filtered = filtered.filter((item) => {
+        // Search in all location-related fields
+        const provinsi = (item.provinsi || "").toLowerCase();
+        const kabupatenKota = (item.kabupaten_kota || "").toLowerCase();
+        const lokasiPenempatan = (item.lokasi_penempatan || "").toLowerCase();
+
+        // Check if the search term appears in any location field
+        return (
+          provinsi.includes(searchTerm) ||
+          kabupatenKota.includes(searchTerm) ||
+          lokasiPenempatan.includes(searchTerm)
+        );
+      });
     }
 
     return filtered;
@@ -303,7 +345,7 @@ function HomePage() {
   };
 
   const resetFilters = () => {
-    setFilters({ search: "", category: "", province: "" });
+    setFilters({ search: "", category: "", province: "", location: "" });
     setCurrentPage(1);
   };
 

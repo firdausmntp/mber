@@ -29,7 +29,7 @@ const FilterSection = ({
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <Search size={16} className="inline mr-1" />
@@ -80,6 +80,20 @@ const FilterSection = ({
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <MapPin size={16} className="inline mr-1" />
+            Area Spesifik
+          </label>
+          <input
+            type="text"
+            value={filters.location || ""}
+            onChange={(e) => handleInputChange("location", e.target.value)}
+            placeholder="Cari area (mis. Jakarta Barat, Medan, dll)"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          />
         </div>
 
         <div className="flex items-end">

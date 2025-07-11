@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Users,
@@ -15,6 +16,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import Navbar from "./Navbar";
+import JobModal from "./JobModal";
 
 // Enhanced keywords dengan sinonim dan variasi
 const skillKeywords = {
@@ -708,6 +710,8 @@ const bidangMapping = {
 };
 
 const PredictionPage = () => {
+  const navigate = useNavigate();
+
   const [userProfile, setUserProfile] = useState({
     nama: "",
     jurusan: "",
@@ -720,7 +724,49 @@ const PredictionPage = () => {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // Initialize with 200 as default and make sure it's a number
   const [defaultApplicants, setDefaultApplicants] = useState(200);
+
+  // State for job modal
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  const [isJobDetailLoading, setIsJobDetailLoading] = useState(false); // Function to handle job card clicks - open modal directly in the prediction page
+  const handleJobClick = (job, event) => {
+    // Check if it's a control-click or middle click (open in new tab)
+    if (event.ctrlKey || event.metaKey || event.button === 1) {
+      // Let the browser handle the click naturally (open in new tab)
+      console.log("Opening in new tab");
+      return; // Allow default behavior
+    }
+
+    // For normal clicks, prevent navigation and open modal
+    event.preventDefault();
+    console.log("Opening job modal for:", job);
+    setSelectedJob(job);
+    setIsJobModalOpen(true);
+  };
+
+  // Fetch job detail for modal
+  const fetchJobDetail = async (job) => {
+    try {
+      setIsJobDetailLoading(true);
+      console.log("Fetching job details for:", job);
+
+      // Here you would typically fetch detailed job info from your API
+      // For now, we'll just use the job data we already have
+
+      // Simulate API delay for realistic UX
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Just use the job as is for now - in a real app you might fetch more details
+      setSelectedJob(job);
+      setIsJobDetailLoading(false);
+    } catch (error) {
+      console.error("Error fetching job details:", error);
+      setIsJobDetailLoading(false);
+      alert("Gagal memuat detail lowongan. Silakan coba lagi.");
+    }
+  };
 
   // Load job data saat komponen mount
   useEffect(() => {
@@ -767,13 +813,26 @@ const PredictionPage = () => {
       [name]: value,
     }));
   };
-
   const calculateAcceptanceRate = (job, matchPercentage) => {
     // Ambil jumlah posisi yang tersedia
     const availablePositions = job.jumlah || 1;
 
-    // Estimasi jumlah pendaftar berdasarkan popularitas bidang dan lokasi
-    let estimatedApplicants = defaultApplicants;
+    // Gunakan input jumlah pendaftar yang dimasukkan user
+    console.log("Using defaultApplicants value:", defaultApplicants);
+
+    // Ensure we're using a proper integer value, not a float or string
+    let estimatedApplicants = parseInt(defaultApplicants, 10);
+
+    // Default fallback jika nilai tidak valid
+    if (isNaN(estimatedApplicants) || estimatedApplicants <= 0) {
+      console.log("Value invalid, using fallback value 50");
+      estimatedApplicants = 50;
+    }
+
+    console.log(
+      "Base estimatedApplicants before adjustments =",
+      estimatedApplicants
+    );
 
     // Adjust berdasarkan bidang populer
     const popularFields = ["Teknologi Informasi", "Marketing", "Desain"];
@@ -891,6 +950,12 @@ const PredictionPage = () => {
     return keywords;
   };
   const findMatchingJobs = () => {
+    // Log current defaultApplicants to confirm its value
+    console.log(
+      "Current defaultApplicants in findMatchingJobs:",
+      defaultApplicants
+    );
+
     const keywords = generateUserKeywords();
     const userSkills = userProfile.skills
       .toLowerCase()
@@ -1154,6 +1219,7 @@ const PredictionPage = () => {
 
     console.log("Starting analysis with profile:", userProfile);
     console.log("Available job data count:", jobData.length);
+    console.log("Using default applicants count:", defaultApplicants);
 
     setIsAnalyzing(true);
 
@@ -1209,6 +1275,7 @@ const PredictionPage = () => {
     setAnalysisResult(null);
     setRecommendations(null);
     setUserKeywords([]);
+    // Keep the current defaultApplicants value
   };
 
   return (
@@ -1391,11 +1458,24 @@ const PredictionPage = () => {
                 <input
                   type="number"
                   value={defaultApplicants}
-                  onChange={(e) => setDefaultApplicants(Number(e.target.value))}
+                  onChange={(e) => {
+                    // Directly parse as integer to avoid floating point issues
+                    const value = parseInt(e.target.value, 10);
+                    console.log("Input changed to:", value);
+                    if (!isNaN(value)) {
+                      setDefaultApplicants(value);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    // Validate on blur - make sure within range
+                    if (isNaN(value) || value < 50) setDefaultApplicants(50);
+                    else if (value > 1000) setDefaultApplicants(1000);
+                  }}
                   min="50"
                   max="1000"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="200"
+                  placeholder="50"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Jumlah estimasi pendaftar untuk menghitung peluang diterima
@@ -1527,9 +1607,11 @@ const PredictionPage = () => {
                     </h4>
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                       {analysisResult.allMatches.map((job, index) => (
-                        <div
+                        <a
+                          href={job.url || `#job-${job.id || index}`}
+                          onClick={(e) => handleJobClick(job, e)}
                           key={index}
-                          className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                          className="block border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer no-underline"
                         >
                           <div className="flex justify-between items-start mb-2">
                             <h5 className="font-semibold text-gray-800">
@@ -1656,7 +1738,7 @@ const PredictionPage = () => {
                               {job.matchedKeywords.slice(0, 5).join(", ")}
                             </p>
                           )}
-                        </div>
+                        </a>
                       ))}
                     </div>
                   </>
@@ -1739,6 +1821,17 @@ const PredictionPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Job Modal - will appear when a job is clicked */}
+      <JobModal
+        job={selectedJob}
+        isOpen={isJobModalOpen}
+        onClose={() => {
+          setIsJobModalOpen(false);
+          setSelectedJob(null);
+        }}
+        isLoading={isJobDetailLoading}
+      />
     </div>
   );
 };
